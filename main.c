@@ -1,3 +1,4 @@
+//main.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,10 +28,10 @@ int main(int argc, char *argv[])
       current = NULL;
       if(yyparse() == 0)
       {
-        //print_tree(root, 1);
-	populatesymbols(root);
-	printf("file: %s\n", file_name);
-	printsymbols(current, 1);
+        print_tree(root, 1);
+		populatesymbols(root);
+		printf("file: %s\n", file_name);
+		printsymbols(current, 1);
       }
       else if(yyparse() == 1)
 	fprintf(stderr, "parser aborter\n");

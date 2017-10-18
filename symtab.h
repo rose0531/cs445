@@ -39,6 +39,7 @@ void populate_init_declarators(struct tree *t, typeptr typ);
 void populatelocals(struct tree *t);
 void check_for_undeclared(struct tree *t);
 int check_if_func_prototype(struct tree *t);
+int check_for_const(struct tree *t);
 
 char *get_membername(struct tree *t);
 char *get_funcname(struct tree *t);								/* get a functions name */

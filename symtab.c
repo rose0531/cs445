@@ -172,7 +172,7 @@ void populatesymbols(struct tree *t){
 	switch(t->prodrule){
 		case declaration:
 			//skip the using_directive rule, it's just for using namespace std
-			if(t->kids[0]->prodrule == using_directive){
+			if(t->kids[0]->kids[0]->prodrule == using_directive){
 				break;
 			}
 			if(t->kids[0]->prodrule == function_definition){
@@ -182,7 +182,8 @@ void populatesymbols(struct tree *t){
 				current = new_st(13);
 
 			//get the type
-			typeptr typ = synthesize_type(t->kids[0]);
+			typeptr typ = synthesize_type(t->kids[0]) == &error_type;
+
 
 			//check if the declaration is a function prototype, if so, set a flag
 			if(check_if_func_prototype(t->kids[0]->kids[0]->kids[1]) == 1)
@@ -190,12 +191,16 @@ void populatesymbols(struct tree *t){
 
 			//get the declaration name
 			populate_init_declarators(t->kids[0]->kids[0]->kids[1], typ);
+
 			func_declaration = 0;
 		
 			break;
 
 
 		case function_definition:
+			if(current == NULL)
+				current = new_st(13);
+
 			s = get_funcname(t->kids[1]);
 
 			/* for entering new scope, you have to give it the
