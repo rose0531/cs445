@@ -14,4 +14,6 @@ struct token{
   int dvalflag;
 };
 
+int typenametable_insert(char *, int);
+
 #endif //TOKEN_H

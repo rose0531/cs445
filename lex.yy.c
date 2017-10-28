@@ -835,12 +835,13 @@ char *yytext;
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include "120gram.tab.h"
 #include "token.h"
 #include "tree.h"
 #include "nonterm.h"
+#include "symtab.h"
 
+#define YY_NO_INPUT
 #define MAX_INCLUDE_DEPTH 2
 
 extern char *file_name;
@@ -853,7 +854,7 @@ void string_to_sval(char *text);
 void char_to_sval(char *text);
 void remove_substring(char *s, char *s_remove);
 int check_identifier(char *);
-int typenametable_insert(char *s, int cat);
+//int typenametable_insert(char *s, int cat);
 struct tree *leaf_node(int token_num);
 void clear_typename_table();
 void clear_sysinclude_flags();
@@ -883,7 +884,7 @@ int ival;
 char *sval;
 double dval;
 
-/* System include flags */
+/* Systeam Includes */
 int included_cmath = 0;
 int included_cstdlib = 0;
 int included_ctime = 0;
@@ -892,11 +893,15 @@ int included_iostream = 0;
 int included_string = 0;
 int included_std = 0;
 
+extern int iostream_flag;
+extern int namespace_flag;
+
+
 /* Other counters */
 int line_num = 1;
 int errors;
 
-#line 900 "lex.yy.c"
+#line 905 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -1114,10 +1119,10 @@ YY_DECL
 		}
 
 	{
-#line 78 "clex.l"
+#line 83 "clex.l"
 
 
-#line 1121 "lex.yy.c"
+#line 1126 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1177,797 +1182,801 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 80 "clex.l"
+#line 85 "clex.l"
 { line_num++; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 81 "clex.l"
+#line 86 "clex.l"
 {  }
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 83 "clex.l"
+#line 88 "clex.l"
 { /*generate_token(COMMENT); return COMMENT;*/ }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 85 "clex.l"
+#line 90 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 86 "clex.l"
+#line 91 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 87 "clex.l"
+#line 92 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 88 "clex.l"
+#line 93 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 89 "clex.l"
+#line 94 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 90 "clex.l"
+#line 95 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 91 "clex.l"
+#line 96 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 92 "clex.l"
+#line 97 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 93 "clex.l"
+#line 98 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 94 "clex.l"
+#line 99 "clex.l"
 { generate_token(BOOL); yylval.treenode = leaf_node(BOOL); return BOOL; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 95 "clex.l"
+#line 100 "clex.l"
 { generate_token(BREAK); yylval.treenode = leaf_node(BREAK); return BREAK; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 96 "clex.l"
+#line 101 "clex.l"
 { generate_token(CASE); yylval.treenode = leaf_node(CASE); return CASE; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 97 "clex.l"
+#line 102 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 98 "clex.l"
+#line 103 "clex.l"
 { generate_token(CHAR); yylval.treenode = leaf_node(CHAR); return CHAR; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 99 "clex.l"
+#line 104 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 100 "clex.l"
+#line 105 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 101 "clex.l"
+#line 106 "clex.l"
 { generate_token(CLASS); yylval.treenode = leaf_node(CLASS); return CLASS; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 102 "clex.l"
+#line 107 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 103 "clex.l"
+#line 108 "clex.l"
 { generate_token(CONST); yylval.treenode = leaf_node(CONST); return CONST; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 104 "clex.l"
+#line 109 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 105 "clex.l"
+#line 110 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 106 "clex.l"
+#line 111 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 107 "clex.l"
+#line 112 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 108 "clex.l"
+#line 113 "clex.l"
 { generate_token(DEFAULT); yylval.treenode = leaf_node(DEFAULT); return DEFAULT; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 109 "clex.l"
+#line 114 "clex.l"
 { generate_token(DELETE); yylval.treenode = leaf_node(DELETE); return DELETE; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 110 "clex.l"
+#line 115 "clex.l"
 { generate_token(DO); yylval.treenode = leaf_node(DO); return DO; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 111 "clex.l"
+#line 116 "clex.l"
 { generate_token(DOUBLE); yylval.treenode = leaf_node(DOUBLE); return DOUBLE; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 112 "clex.l"
+#line 117 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 113 "clex.l"
+#line 118 "clex.l"
 { generate_token(ELSE); yylval.treenode = leaf_node(ELSE); return ELSE; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 114 "clex.l"
+#line 119 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 115 "clex.l"
+#line 120 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 116 "clex.l"
+#line 121 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 117 "clex.l"
+#line 122 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 118 "clex.l"
+#line 123 "clex.l"
 { generate_token(FALSE); yylval.treenode = leaf_node(FALSE); return FALSE; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 119 "clex.l"
+#line 124 "clex.l"
 { generate_token(FLOAT); yylval.treenode = leaf_node(FLOAT); return FLOAT; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 120 "clex.l"
+#line 125 "clex.l"
 { generate_token(FOR); yylval.treenode = leaf_node(FOR); return FOR; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 121 "clex.l"
+#line 126 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 122 "clex.l"
+#line 127 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 123 "clex.l"
+#line 128 "clex.l"
 { generate_token(IF); yylval.treenode = leaf_node(IF); return IF; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 124 "clex.l"
+#line 129 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 125 "clex.l"
+#line 130 "clex.l"
 { generate_token(INT); yylval.treenode = leaf_node(INT); return INT; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 126 "clex.l"
+#line 131 "clex.l"
 { generate_token(LONG); yylval.treenode = leaf_node(LONG); return LONG; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 127 "clex.l"
+#line 132 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 128 "clex.l"
+#line 133 "clex.l"
 { generate_token(NAMESPACE); yylval.treenode = leaf_node(NAMESPACE); return NAMESPACE; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 129 "clex.l"
+#line 134 "clex.l"
 { generate_token(NEW); yylval.treenode = leaf_node(NEW); return NEW; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 130 "clex.l"
+#line 135 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 131 "clex.l"
+#line 136 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 132 "clex.l"
+#line 137 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 133 "clex.l"
+#line 138 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 134 "clex.l"
+#line 139 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 135 "clex.l"
+#line 140 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 136 "clex.l"
+#line 141 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 137 "clex.l"
+#line 142 "clex.l"
 { generate_token(PRIVATE); yylval.treenode = leaf_node(PRIVATE); return PRIVATE; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 138 "clex.l"
+#line 143 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 139 "clex.l"
+#line 144 "clex.l"
 { generate_token(PUBLIC); yylval.treenode = leaf_node(PUBLIC); return PUBLIC; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 140 "clex.l"
+#line 145 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 141 "clex.l"
+#line 146 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 142 "clex.l"
+#line 147 "clex.l"
 { generate_token(RETURN); yylval.treenode = leaf_node(RETURN); return RETURN; }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 143 "clex.l"
+#line 148 "clex.l"
 { generate_token(SHORT); yylval.treenode = leaf_node(SHORT); return SHORT; }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 144 "clex.l"
+#line 149 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 145 "clex.l"
+#line 150 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 146 "clex.l"
+#line 151 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 147 "clex.l"
+#line 152 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 148 "clex.l"
+#line 153 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 149 "clex.l"
+#line 154 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 150 "clex.l"
+#line 155 "clex.l"
 { generate_token(SWITCH); yylval.treenode = leaf_node(SWITCH); return SWITCH; }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 151 "clex.l"
+#line 156 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 152 "clex.l"
+#line 157 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 153 "clex.l"
+#line 158 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 154 "clex.l"
+#line 159 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 155 "clex.l"
+#line 160 "clex.l"
 { generate_token(TRUE); yylval.treenode = leaf_node(TRUE); return TRUE; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 156 "clex.l"
+#line 161 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 157 "clex.l"
+#line 162 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 158 "clex.l"
+#line 163 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 159 "clex.l"
+#line 164 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 160 "clex.l"
+#line 165 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 161 "clex.l"
+#line 166 "clex.l"
 { generate_token(UNSIGNED); yylval.treenode = leaf_node(UNSIGNED); return UNSIGNED; }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 162 "clex.l"
+#line 167 "clex.l"
 { generate_token(USING); yylval.treenode = leaf_node(USING); return USING; }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 163 "clex.l"
+#line 168 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 164 "clex.l"
+#line 169 "clex.l"
 { generate_token(VOID); yylval.treenode = leaf_node(VOID); return VOID; }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 165 "clex.l"
+#line 170 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 166 "clex.l"
+#line 171 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 167 "clex.l"
+#line 172 "clex.l"
 { generate_token(WHILE); yylval.treenode = leaf_node(WHILE); return WHILE; }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 168 "clex.l"
+#line 173 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 169 "clex.l"
+#line 174 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 170 "clex.l"
-{ included_iostream = 1; }
+#line 175 "clex.l"
+{ included_iostream = 1; iostream_flag = 1; }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 171 "clex.l"
+#line 176 "clex.l"
 { included_string = 1; }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 172 "clex.l"
+#line 177 "clex.l"
 { included_ctime = 1; }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 173 "clex.l"
+#line 178 "clex.l"
 { included_cstdlib = 1; }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 174 "clex.l"
+#line 179 "clex.l"
 { included_cmath = 1; }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 175 "clex.l"
+#line 180 "clex.l"
 { included_fstream = 1; }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 177 "clex.l"
-{ included_std = 1; generate_token(STD); yylval.treenode = leaf_node(STD);
+#line 182 "clex.l"
+{ included_std = 1; generate_token(STD); yylval.treenode = leaf_node(STD); namespace_flag = 1;
                 if (included_string) typenametable_insert("string", CLASS_NAME);
                 if (included_iostream)
                 {
                    typenametable_insert("ifstream", CLASS_NAME);
                    typenametable_insert("ofstream", CLASS_NAME);
                    typenametable_insert("fstream", CLASS_NAME);
+                   typenametable_insert("cout", IDENTIFIER);
+                   typenametable_insert("cin", IDENTIFIER);
+                   typenametable_insert("endl", IDENTIFIER);
                 }
                 return STD;
              }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 189 "clex.l"
-{   int cat = check_identifier(yytext);
-                            generate_token(cat); 
+#line 197 "clex.l"
+{   int cat;
+                            cat = check_identifier(yytext);
+                            generate_token(cat);
                             yylval.treenode = leaf_node(cat); 
                             return cat;
                         }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 195 "clex.l"
+#line 204 "clex.l"
 { lexerr("Binary not supported"); }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 197 "clex.l"
+#line 206 "clex.l"
 { lexerr("Hex not supported"); }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 199 "clex.l"
+#line 208 "clex.l"
 { lexerr("Octal not supported"); }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 201 "clex.l"
+#line 210 "clex.l"
 { ival = atoi(yytext); generate_token(INTEGER); yylval.treenode = leaf_node(INTEGER); return INTEGER; }
 	YY_BREAK
 case 101:
 /* rule 101 can match eol */
 YY_RULE_SETUP
-#line 203 "clex.l"
+#line 212 "clex.l"
 { char_to_sval(yytext); generate_token(CHARACTER); yylval.treenode = leaf_node(CHARACTER); return CHARACTER; }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 205 "clex.l"
+#line 214 "clex.l"
 { dval = atof(yytext); generate_token(FLOATING); yylval.treenode = leaf_node(FLOATING); return FLOATING; }
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 206 "clex.l"
+#line 215 "clex.l"
 { dval = atof(yytext); generate_token(FLOATING); yylval.treenode = leaf_node(FLOATING); return FLOATING; }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 207 "clex.l"
+#line 216 "clex.l"
 { dval = atof(yytext); generate_token(FLOATING); yylval.treenode = leaf_node(FLOATING); return FLOATING; }
 	YY_BREAK
 case 105:
 /* rule 105 can match eol */
 YY_RULE_SETUP
-#line 209 "clex.l"
+#line 218 "clex.l"
 { string_to_sval(yytext); generate_token(STRING); yylval.treenode = leaf_node(STRING); return STRING; }
 	YY_BREAK
 case 106:
 /* rule 106 can match eol */
 YY_RULE_SETUP
-#line 211 "clex.l"
+#line 220 "clex.l"
 { handle_user_include(); }
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 214 "clex.l"
+#line 223 "clex.l"
 { generate_token(DOT); yylval.treenode = leaf_node(DOT); return DOT; }
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 215 "clex.l"
+#line 224 "clex.l"
 { generate_token(SREQ); yylval.treenode = leaf_node(SREQ); return SREQ; }
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 216 "clex.l"
+#line 225 "clex.l"
 { generate_token(SLEQ); yylval.treenode = leaf_node(SLEQ); return SLEQ; }
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 217 "clex.l"
+#line 226 "clex.l"
 { generate_token(ADDEQ); yylval.treenode = leaf_node(ADDEQ); return ADDEQ; }
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 218 "clex.l"
+#line 227 "clex.l"
 { generate_token(SUBEQ); yylval.treenode = leaf_node(SUBEQ); return SUBEQ; }
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 219 "clex.l"
+#line 228 "clex.l"
 { generate_token(MULEQ); yylval.treenode = leaf_node(MULEQ); return MULEQ; }
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 220 "clex.l"
+#line 229 "clex.l"
 { generate_token(DIVEQ); yylval.treenode = leaf_node(DIVEQ); return DIVEQ; }
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 221 "clex.l"
+#line 230 "clex.l"
 { generate_token(MODEQ); yylval.treenode = leaf_node(MODEQ); return MODEQ; }
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 222 "clex.l"
+#line 231 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 223 "clex.l"
+#line 232 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 224 "clex.l"
+#line 233 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 225 "clex.l"
+#line 234 "clex.l"
 { generate_token(SR); yylval.treenode = leaf_node(SR); return SR; }
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 226 "clex.l"
+#line 235 "clex.l"
 { generate_token(SL); yylval.treenode = leaf_node(SL); return SL; }
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 227 "clex.l"
+#line 236 "clex.l"
 { generate_token(PLUSPLUS); yylval.treenode = leaf_node(PLUSPLUS); return PLUSPLUS; }
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 228 "clex.l"
+#line 237 "clex.l"
 { generate_token(MINUSMINUS); yylval.treenode = leaf_node(MINUSMINUS); return MINUSMINUS; }
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 229 "clex.l"
+#line 238 "clex.l"
 { generate_token(ARROW); yylval.treenode = leaf_node(ARROW); return ARROW; }
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 230 "clex.l"
+#line 239 "clex.l"
 { generate_token(ANDAND); yylval.treenode = leaf_node(ANDAND); return ANDAND; }
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 231 "clex.l"
+#line 240 "clex.l"
 { generate_token(OROR); yylval.treenode = leaf_node(OROR); return OROR; }
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 232 "clex.l"
+#line 241 "clex.l"
 { generate_token(LTEQ); yylval.treenode = leaf_node(LTEQ); return LTEQ; }
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 233 "clex.l"
+#line 242 "clex.l"
 { generate_token(GTEQ); yylval.treenode = leaf_node(GTEQ); return GTEQ; }
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 234 "clex.l"
+#line 243 "clex.l"
 { generate_token(EQ); yylval.treenode = leaf_node(EQ); return EQ; }
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 235 "clex.l"
+#line 244 "clex.l"
 { generate_token(NOTEQ); yylval.treenode = leaf_node(NOTEQ); return NOTEQ; }
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 236 "clex.l"
+#line 245 "clex.l"
 { generate_token(COLONCOLON); yylval.treenode = leaf_node(COLONCOLON); return COLONCOLON; }
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 237 "clex.l"
+#line 246 "clex.l"
 { generate_token(SM); yylval.treenode = leaf_node(SM); return SM; }
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 238 "clex.l"
+#line 247 "clex.l"
 { generate_token(LC); yylval.treenode = leaf_node(LC); return LC; }
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 239 "clex.l"
+#line 248 "clex.l"
 { generate_token(RC); yylval.treenode = leaf_node(RC); return RC; }
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 240 "clex.l"
+#line 249 "clex.l"
 { generate_token(CM); yylval.treenode = leaf_node(CM); return CM; }
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 241 "clex.l"
+#line 250 "clex.l"
 { generate_token(COLON); yylval.treenode = leaf_node(COLON); return COLON; }
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 242 "clex.l"
+#line 251 "clex.l"
 { generate_token(ASN); yylval.treenode = leaf_node(ASN); return ASN; }
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 243 "clex.l"
+#line 252 "clex.l"
 { generate_token(LP); yylval.treenode = leaf_node(LP); return LP; }
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 244 "clex.l"
+#line 253 "clex.l"
 { generate_token(RP); yylval.treenode = leaf_node(RP); return RP; }
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
-#line 245 "clex.l"
+#line 254 "clex.l"
 { generate_token(LB); yylval.treenode = leaf_node(LB); return LB; }
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 246 "clex.l"
+#line 255 "clex.l"
 { generate_token(RB); yylval.treenode = leaf_node(RB); return RB; }
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 247 "clex.l"
+#line 256 "clex.l"
 { generate_token(AND); yylval.treenode = leaf_node(AND); return AND; }
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 248 "clex.l"
+#line 257 "clex.l"
 { generate_token(BANG); yylval.treenode = leaf_node(BANG); return BANG; }
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 249 "clex.l"
+#line 258 "clex.l"
 { generate_token(NOT); yylval.treenode = leaf_node(NOT); return NOT; }
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
-#line 250 "clex.l"
+#line 259 "clex.l"
 { generate_token(MINUS); yylval.treenode = leaf_node(MINUS); return MINUS; }
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
-#line 251 "clex.l"
+#line 260 "clex.l"
 { generate_token(PLUS); yylval.treenode = leaf_node(PLUS); return PLUS; }
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
-#line 252 "clex.l"
+#line 261 "clex.l"
 { generate_token(MUL); yylval.treenode = leaf_node(MUL); return MUL; }
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 253 "clex.l"
+#line 262 "clex.l"
 { generate_token(DIV); yylval.treenode = leaf_node(DIV); return DIV; }
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 254 "clex.l"
+#line 263 "clex.l"
 { generate_token(MOD); yylval.treenode = leaf_node(MOD); return MOD; }
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
-#line 255 "clex.l"
+#line 264 "clex.l"
 { generate_token(LT); yylval.treenode = leaf_node(LT); return LT; }
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 256 "clex.l"
+#line 265 "clex.l"
 { generate_token(GT); yylval.treenode = leaf_node(GT); return GT; }
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
-#line 257 "clex.l"
+#line 266 "clex.l"
 { generate_token(ER); yylval.treenode = leaf_node(ER); return ER; }
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
-#line 258 "clex.l"
+#line 267 "clex.l"
 { generate_token(OR); yylval.treenode = leaf_node(OR); return OR; }
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 259 "clex.l"
+#line 268 "clex.l"
 { generate_token(QUEST); yylval.treenode = leaf_node(QUEST); return QUEST; }
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
-#line 260 "clex.l"
+#line 269 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 261 "clex.l"
+#line 270 "clex.l"
 { lexerr(yytext); }
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
-#line 263 "clex.l"
+#line 272 "clex.l"
 ECHO;
 	YY_BREAK
-#line 1971 "lex.yy.c"
+#line 1980 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2968,7 +2977,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 263 "clex.l"
+#line 272 "clex.l"
 
 
 
@@ -2979,7 +2988,7 @@ void lexerr(char *s)
 	fprintf(stderr, "%s: lexical error", s);
 
 	fprintf(stderr, ", C++ token \"%s\" is not legal in 120++, file: %s line: %d\n", yytext, file_name, line_num);
-        exit(1);
+  exit(1);
 }
 
 /*
@@ -2991,7 +3000,7 @@ int yywrap()
    {
       line_num = 1;
       clear_typename_table();
-      clear_sysinclude_flags();
+      //clear_sysinclude_flags();
 
       return 1;
    }
@@ -3167,11 +3176,10 @@ void remove_substring(char *s, char *s_remove)
    char *temp_str = NULL;
    int rlen = strlen(s_remove);
    
-   while(temp_str = strstr(s, s_remove))
+   while((temp_str = strstr(s, s_remove)))
    {
-      int tlen = strlen(temp_str);     
+      //int tlen = strlen(temp_str);
       
-      /* If we need to remove escaped ' " or \ , then only remove the first backslash */
       if(strcmp(s_remove, "\\'") == 0 || strcmp(s_remove, "\\\\") == 0 || strcmp(s_remove, "\\\"") == 0)
          memmove(temp_str, temp_str + (rlen - 1), 1 + strlen(temp_str + (rlen - 1)));
       
@@ -3211,8 +3219,9 @@ void remove_substring(char *s, char *s_remove)
 int typenametable_lookup(char *s)
 {
    struct typenametable_entry *tmp = head;
-   while (tmp) {
-      if (!strcmp(s, tmp->name)) return tmp->category;
+   while (tmp != NULL) {
+      if (strcmp(s, tmp->name) == 0)
+        return tmp->category;
       tmp = tmp->next;
    }
    return IDENTIFIER;
@@ -3234,6 +3243,7 @@ int typenametable_insert(char *s, int cat)
    tmp->category = cat;
    tmp->next = head;
    head = tmp;
+   return 0;
 }
 
 int check_identifier(char *s)

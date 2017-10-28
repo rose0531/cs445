@@ -58,6 +58,7 @@ extern char *file_name;
 int yydebug = 0;
 
 
+int yylex();
 void yyerror(char *s);
 struct tree *tree_node(int rule, int k, ...);
 
@@ -73,10 +74,10 @@ struct tree *tree_node(int rule, int k, ...);
 %type < treenode > parameter_declaration_list parameter_declaration
 %type < treenode > decl_specifier_seq declarator decl_specifier
 %type < treenode > type_specifier simple_type_specifier
-%type < treenode > ptr_operator
+%type < treenode > ptr_operator qualified_id
 %type < treenode > constant_expression_opt class_name constant_expression conditional_expression  
 %type < treenode > literal integer_literal character_literal floating_literal string_literal boolean_literal 
-%type < treenode > translation_unit primary_expression id_expression unqualified_id qualified_id nested_name_specifier 
+%type < treenode > translation_unit primary_expression id_expression unqualified_id nested_name_specifier 
 %type < treenode > postfix_expression expression_list unary_expression unary_operator new_expression new_placement 
 %type < treenode > new_type_id new_declarator direct_new_declarator new_initializer delete_expression cast_expression 
 %type < treenode > pm_expression multiplicative_expression additive_expression shift_expression relational_expression 
@@ -85,7 +86,7 @@ struct tree *tree_node(int rule, int k, ...);
 %type < treenode > statement labeled_statement expression_statement compound_statement statement_seq 
 %type < treenode > selection_statement condition iteration_statement for_init_statement jump_statement declaration_statement 
 %type < treenode > declaration_seq declaration block_declaration simple_declaration 
-%type < treenode > type_name 
+%type < treenode > type_name
 %type < treenode > elaborated_type_specifier
 %type < treenode > using_directive 
 %type < treenode > init_declarator_list init_declarator cv_qualifier_seq cv_qualifier declarator_id type_id
@@ -109,14 +110,14 @@ struct tree *tree_node(int rule, int k, ...);
 %token < treenode > MINUS MUL MOD NOT OR PLUS QUEST RB RC RP SM
 %token < treenode > COLONCOLON ADDEQ SUBEQ MULEQ DIVEQ MODEQ
 %token < treenode > SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
-%token < treenode > PLUSPLUS MINUSMINUS ARROW STD
+%token < treenode > PLUSPLUS MINUSMINUS ARROW 
 %token < treenode > BOOL BREAK CASE CHAR CLASS CONST
 %token < treenode > DEFAULT DELETE DO DOUBLE ELSE
-%token < treenode > FALSE FLOAT FOR IF INT LONG NAMESPACE NEW
+%token < treenode > FALSE FLOAT FOR IF INT LONG NEW
 %token < treenode > PRIVATE PUBLIC RETURN
-%token < treenode > SHORT SWITCH
-%token < treenode > TRUE TYPENAME UNSIGNED USING
-%token < treenode > VOID WHILE
+%token < treenode > SHORT SWITCH 
+%token < treenode > TRUE TYPENAME UNSIGNED 
+%token < treenode > VOID WHILE USING NAMESPACE STD
 
 /* Precedence */
 %left ELSE
@@ -213,7 +214,7 @@ unqualified_id:
 	;
 
 qualified_id:
-	nested_name_specifier unqualified_id 			{ $$ = tree_node(qualified_id, 2, $1, $2); }
+	class_name id_expression { $$ = tree_node(qualified_id, 2, $1, $2); }
 	;
 
 nested_name_specifier:
@@ -549,7 +550,7 @@ direct_declarator:
 	| CLASS_NAME LP parameter_declaration_clause RP { $$ = tree_node(direct_declarator, 4, $1, $2, $3, $4); }
 	| CLASS_NAME COLONCOLON declarator_id LP parameter_declaration_clause RP { $$ = tree_node(direct_declarator, 6, $1, $2, $3, $4, $5, $6); }
 	| CLASS_NAME COLONCOLON CLASS_NAME LP parameter_declaration_clause RP { $$ = tree_node(direct_declarator, 6, $1, $2, $3, $4, $5, $6); }
-        | direct_declarator LB constant_expression_opt RB { $$ = tree_node(direct_declarator, 4, $1, $2, $3, $4); }
+    | direct_declarator LB constant_expression_opt RB { $$ = tree_node(direct_declarator, 4, $1, $2, $3, $4); }
 	| LP declarator RP { $$ = tree_node(direct_declarator, 3, $1, $2, $3); }
 	;
 
@@ -671,7 +672,6 @@ member_declaration:
 	| member_declarator_list SM { $$ = tree_node(member_declaration, 2, $1, $2); }
 	| SM { $$ = tree_node(member_declaration, 1, $1); }
 	| function_definition SEMICOLON_opt { $$ = tree_node(member_declaration, 2, $1, $2); }
-	| qualified_id SM { $$ = tree_node(member_declaration, 2, $1, $2); }
 	;
 
 member_declarator_list:

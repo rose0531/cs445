@@ -13,14 +13,11 @@ SymbolTable globals;
 SymbolTable current;
 int const_flag = 0;
 int func_declaration = 0;
+int iostream_flag = 0;
+int namespace_flag = 0;
 
-/* error handling */
-void error(char *s, struct tree *t){
-	while(t->prodrule < 0 && t->nkids > 0)
-		t = t->kids[0];
-	yylval.treenode = t;
-	yyerror(s);
-}
+int and_flag = 0;
+int counter = 0;
 
 
 /* create symbol table*/
@@ -61,10 +58,11 @@ void delete_st(SymbolTable st){
 
 /* lookup symbol from symbol table*/
 SymbolTableEntry lookup_symbol(SymbolTable st, char *sym){
-	int i, h;
+	int h;
 	SymbolTableEntry se;
-	if(st == NULL)
+	if(st == NULL){
 		return NULL;
+	}
 
 	h = hash(st, sym);
 	for(se = st->tbl[h]; se != NULL; se = se->next){
@@ -73,15 +71,15 @@ SymbolTableEntry lookup_symbol(SymbolTable st, char *sym){
 			return se;
 		}
 	}
+
 	return NULL;
 }
 
 /* hash function*/
 int hash(SymbolTable st, char *s){
 	int h = 0;
-	char *str = strdup(s);
 	char c;
-	while(c = *s++){
+	while((c = *s++)){
 		h += c & 0377;
 		h *= 37;
 	}
@@ -112,25 +110,16 @@ void enter_newscope(char *s, int typ, struct tree *rv_tree, struct tree *param_t
 
 /* enter symbol into table*/
 int insert_symbol(SymbolTable st, char *str, typeptr t){
-	int i, h, l;
+	int h;
 	SymbolTableEntry se;
 
 	h = hash(st, str);
 	for(se = st->tbl[h]; se != NULL; se = se->next){
-		if(!strcmp(str, se->s)){
+		if(strcmp(str, se->s) == 0){
 			/* copy of the string is already in the table */
 			if(se->func_declaration == 1){
-				se = (struct st_entry *)alloc(sizeof(struct st_entry));
-				se->next = st->tbl[h];
-				se->table = st;
-				st->tbl[h] = se;
-				se->s = str;
-				se->type = t; 
-				se->const_flag = const_flag;
-				se->func_declaration = func_declaration;
-				const_flag = 0;
-				func_declaration = 0;
-				st->nEntries++;
+				se->type = t;
+				se->func_declaration = 0;				
 				return 1;
 			}else{
 				fprintf(stderr, "redeclaration: \"%s\"\n", str);
@@ -151,8 +140,8 @@ int insert_symbol(SymbolTable st, char *str, typeptr t){
 	se->next = st->tbl[h];
 	se->table = st;
 	st->tbl[h] = se;
-	se->s = str;
-	se->type = t; 
+	se->s = strdup(str);
+	se->type = t;
 	se->const_flag = const_flag;
 	se->func_declaration = func_declaration;
 	const_flag = 0;
@@ -166,13 +155,15 @@ int insert_symbol(SymbolTable st, char *str, typeptr t){
 void populatesymbols(struct tree *t){
 	int i;
 	char *s;
-	if(t == NULL)
+	if(t == NULL){
 		return;
+	}
 
 	switch(t->prodrule){
 		case declaration:
 			//skip the using_directive rule, it's just for using namespace std
 			if(t->kids[0]->kids[0]->prodrule == using_directive){
+				namespace_flag = 1;
 				break;
 			}
 			if(t->kids[0]->prodrule == function_definition){
@@ -182,12 +173,13 @@ void populatesymbols(struct tree *t){
 				current = new_st(13);
 
 			//get the type
-			typeptr typ = synthesize_type(t->kids[0]) == &error_type;
+			typeptr typ = synthesize_type(t->kids[0]);
 
 
 			//check if the declaration is a function prototype, if so, set a flag
-			if(check_if_func_prototype(t->kids[0]->kids[0]->kids[1]) == 1)
+			if(check_if_func_prototype(t->kids[0]->kids[0]->kids[1])){
 				func_declaration = 1;
+			}
 
 			//get the declaration name
 			populate_init_declarators(t->kids[0]->kids[0]->kids[1], typ);
@@ -212,7 +204,7 @@ void populatesymbols(struct tree *t){
 			else
 				enter_newscope(s, FUNC_TYPE, t->kids[0], t->kids[1]->kids[0]->kids[2]);
 
-			/* get local variables in function body */
+			/* get local variables in function body and put them in the symbol table*/
 			populatelocals(t->kids[3]);
 
 			break;
@@ -254,26 +246,7 @@ void populatesymbols(struct tree *t){
 		case function_definition:
 		case class_specifier:
 			popscope();
-	}
-}
-
-
-int check_if_func_prototype(struct tree *t){
-	switch(t->prodrule){
-		case init_declarator_list:
-		case init_declarator:
-		case declarator:
-			check_if_func_prototype(t->kids[0]);
-			break;
-
-		case direct_declarator:
-			if(t->nkids > 1)
-				return 1;
-			else
-				return 0;
-
-		default:
-			return 0;
+			return;
 	}
 }
 
@@ -282,27 +255,37 @@ int check_if_func_prototype(struct tree *t){
 void populate_init_declarators(struct tree *t, typeptr typ){
 	int i;
 	switch(t->prodrule){
-		case init_declarator_list:
-			if(t->nkids == 3){
-				populate_init_declarators(t->kids[0], typ);
-				populate_init_declarators(t->kids[2], typ);	
-			}else
-				populate_init_declarators(t->kids[0], typ);
-			break;
-
-		case init_declarator:
-		case declarator:
-		case direct_declarator:
 		case declarator_id:
 		case id_expression:
 		case unqualified_id:
+		case init_declarator:
+		case direct_declarator:
 			populate_init_declarators(t->kids[0], typ);
-			break;
+			return;
 
 		case identifier:
 			insert_symbol(current, t->kids[0]->leaf->text, typ);
-			break;
+			return;
 
+		case declarator:
+			if(t->nkids > 1){
+				/* we know that t->kids[0] is a ptr_operator */
+				typ->pointer = 1;
+				populate_init_declarators(t->kids[1], typ);
+			}else
+				populate_init_declarators(t->kids[0], typ);
+			return;
+
+		default:
+			if(t->prodrule < 0){
+				for(i = 0; i < t->nkids; i++){
+					if(t->kids[i] == NULL)
+						return;
+					populate_init_declarators(t->kids[i], typ);
+				}
+				return;
+			}
+			return;
 	}
 }
 
@@ -342,13 +325,11 @@ void populatelocals(struct tree *t){
 						typ = synthesize_type(t->kids[2]->kids[0]->kids[0]);
 						populate_init_declarators(t->kids[2]->kids[1], typ);
 					}
-					//type check if there is no type_specifier
 					populatelocals(t->kids[4]);
 					popscope();
 				}else{ // if s == "do"
 					enter_newscope(s, FUNC_TYPE, NULL, NULL);
 					populatelocals(t->kids[1]);
-					//type check
 					popscope();
 				}
 				return;
@@ -361,13 +342,17 @@ void populatelocals(struct tree *t){
 				populate_init_declarators(t->kids[1], typ);
 				return;
 
-			case expression_statement:
-				check_for_undeclared(t);
+			case qualified_id:
+				typ = synthesize_type(t->kids[0]);
+				populate_init_declarators(t->kids[1], typ);
 				return;
+
 
 			default:
 				if(t->prodrule < 0){
 					for(i = 0; i < t->nkids; i++){
+						if(t->kids[i] == NULL)
+							return;
 						populatelocals(t->kids[i]);
 					}
 					return;
@@ -378,35 +363,7 @@ void populatelocals(struct tree *t){
 }
 
 
-void check_for_undeclared(struct tree *t){
-	int i;
-	while(1){
-		switch(t->prodrule){
-			case identifier:{
-				SymbolTableEntry ste = NULL;
-				SymbolTable st = current;
-				do{
-					ste = lookup_symbol(st, t->kids[0]->leaf->text);
-					st = st->parent;
-				}while(!ste && st);
-				if(!ste){ 
-					fprintf(stderr, "undeclared symbol: \"%s\": line %d\n", t->kids[0]->leaf->text, t->kids[0]->leaf->lineno);
-					exit(3);
-				}
-				return;
-			}
 
-			default:
-				if(t->prodrule < 0){
-					for(i = 0; i < t->nkids; i++){
-						check_for_undeclared(t->kids[i]);
-					}
-					return;
-				}
-				return;
-		}
-	}
-}
 
 
 char *get_membername(struct tree *t){
@@ -431,7 +388,7 @@ char *get_membername(struct tree *t){
 				return t->kids[0]->leaf->text;
 
 			default:
-				error("get_membername called on non-member_declarator subtree\n", t);
+				fprintf(stderr, "get_membername called on non-member_declarator subtree\n");
 				return NULL;
 		}
 	}
@@ -441,15 +398,14 @@ char *get_membername(struct tree *t){
 char *get_funcname(struct tree *t){
    while (1) {
       switch (t->prodrule) {
-
       case identifier:
 	  	return t->kids[0]->leaf->text;
 
       case declarator:
       	if(t->kids[0]->prodrule == ptr_operator)
-			t = t->kids[1];
-		else
-			t = t->kids[0];
+      		t = t->kids[1];
+      	else
+      		t = t->kids[0];
 		break;
 
       case direct_declarator:
@@ -465,7 +421,7 @@ char *get_funcname(struct tree *t){
 	 	break;
 
       default:
-	 	error("get_funcname called on non-function subtree\n", t);
+	 	fprintf(stderr, "get_funcname called on non-function subtree\n");
 	 	/* may want to sprintf in order to print the t->label on this */
 	 	return NULL;
 	  }
@@ -493,21 +449,49 @@ int check_for_const(struct tree *t){
 }
 
 
+int check_if_func_prototype(struct tree *t){
+	switch(t->prodrule){
+		case init_declarator_list:
+		case init_declarator:
+		case declarator:
+			check_if_func_prototype(t->kids[0]);
+			break;
+
+		case direct_declarator:
+			if(t->nkids > 1){
+				return 0;
+			}
+			else{
+				return 1;
+			}
+
+		default:
+			return 1;
+	}
+	return 1;
+}
+
+
 void printsymbols(SymbolTable st, int level){
 	int i, j;
 	SymbolTableEntry ste;
 
-	if(st == NULL) return;
+	if(st == NULL) 
+		return;
 
 	for(i = 0; i < st->nBuckets; i++){
 		for(ste = st->tbl[i]; ste; ste = ste->next){
 			for(j = 0; j < level; j++) printf("\t");
 			printf("sym: ");
+
 			if(ste->func_declaration == 1)
 				printf("(function prototype) ");
+
 			if(ste->const_flag == 1)
 				printf("(const) ");
-			printf("%s\n", ste->s);
+
+			printf("%s, type: %d\n", ste->s, ste->type->basetype);
+			
 			if(!ste->type) continue;
 			switch(ste->type->basetype){
 				case CLASS_TYPE:
@@ -518,5 +502,425 @@ void printsymbols(SymbolTable st, int level){
 					break;
 			}
 		}
+	}
+}
+
+
+
+/*
+ * **********************************************
+ * *			Type checking section 			*
+ * **********************************************
+*/
+
+
+/* type_check_locals is given a function_body tree*/
+void typecheck_symbols(struct tree *t){
+	typeptr lt, rt;
+	int i;
+	switch(t->prodrule){
+		case init_declarator:
+			if(t->nkids > 1 && t->kids[1] != NULL){
+				lt = get_left_type(t->kids[0], current);
+				rt = get_right_type(t->kids[1], current);
+				if(compare_types(ASN, lt, rt) == 0){
+					return;
+				}else{
+					fprintf(stderr, "non-matching types: \"%s = %s\"\n", typename(lt), typename(rt));
+					exit(3);
+				}
+			}
+			return;
+
+
+		case function_definition:{
+			typeptr functype;
+			functype = get_right_type(t->kids[1]->kids[0]->kids[0], current); //fails on t->kids[] = NULL
+			printf("functype->basetype: %s\n", typename(functype));
+			typecheck_locals(t->kids[3], functype);
+			return;
+		}
+
+
+		/*
+		case class_specifier:
+			return;
+		*/
+
+		default:
+			if(t->prodrule < 0){
+				for(i = 0; i < t->nkids; i++){
+					if(t->kids[i] == NULL)
+						return;
+					typecheck_symbols(t->kids[i]);
+				}
+				return;
+			}
+			return;
+
+	}
+}
+
+
+void typecheck_locals(struct tree *t, typeptr functype){
+	typeptr lt;
+	typeptr rt;
+	typeptr f;
+	char *s;
+	int i;
+
+	while(1){
+		switch(t->prodrule){
+			case init_declarator:
+				if(t->nkids > 1 && t->kids[1] != NULL){
+					lt = get_left_type(t->kids[0], functype->u.f.st);
+					rt = get_right_type(t->kids[1], functype->u.f.st);
+					if(compare_types(ASN, lt, rt) == 0){
+						return;
+					}else{
+						fprintf(stderr, "non-matching types: \"%s = %s\"\n", typename(lt), typename(rt));
+						exit(3);
+					}
+				}
+
+			case assignment_expression:
+				/* check assignment expressions */
+				if(t->nkids > 1){
+					/* check left side of the assignment */
+					lt = get_left_type(t->kids[0], functype->u.f.st);
+					rt = get_right_type(t->kids[2], functype->u.f.st);
+					if(compare_types(ASN, lt, rt) == 0){
+						return;
+					}else{
+						fprintf(stderr, "non-matching types: \"%s = %s\"\n", typename(lt), typename(rt));
+						exit(3);
+					}
+				}
+
+
+			case postfix_expression:
+				if(t->nkids > 1){
+					f = get_left_type(t->kids[0], functype->u.f.st);
+					s = get_funcname(t->kids[0]->kids[0]->kids[0]);
+					/* typecheck_params takes the function parameters tree,
+					 * the functions type, the functions name, and the current
+					 * symbol table that we are in
+					*/
+					typecheck_params(t->kids[2], f, s, functype->u.f.st);
+					return;
+				}
+
+
+			/*
+			case class_specifier:
+				return;
+			*/
+
+			default:
+				if(t->prodrule < 0){
+					for(i = 0; i < t->nkids; i++){
+						if(t->kids[i] == NULL)
+							return;
+						typecheck_locals(t->kids[i], functype);
+					}
+					return;
+				}
+				return;
+
+		}
+	}
+}
+
+
+
+
+void typecheck_params(struct tree *t, typeptr functype, char *s, SymbolTable st){
+	int i;
+	int num_params = 0;
+	paramlist pptr;
+	//typeptr paramtype1, paramtype2;
+
+	while(1){
+		switch(t->prodrule){
+			case expression_list_opt:
+				num_params = count_params(t->kids[0], num_params);
+				printf("nparams: %d\n", functype->u.f.nparams);
+				printf("num_params: %d\n", num_params);
+				if(num_params != functype->u.f.nparams){
+					fprintf(stderr, "in \"%s\": wrong number of parameters for function: %s()\n", 
+							st->scope->u.f.name, s);
+					exit(3);
+				}else{
+					typecheck_params(t->kids[0], functype, s, st);
+				}
+				
+
+
+			case expression_list:
+				if(t->nkids > 1){
+					pptr = functype->u.f.parameters;
+					pptr = traverse_parameters(t, functype, pptr, st);
+				}
+				return;
+
+
+			default:
+				if(t->prodrule < 0){
+					for(i = 0; i < t->nkids; i++){
+						if(t->kids[i] == NULL)
+							return;
+						typecheck_params(t->kids[i], functype, s, st);
+					}
+					return;
+				}
+				return;
+
+		}
+	}
+}
+
+
+paramlist traverse_parameters(struct tree *t, typeptr functype, paramlist pptr, SymbolTable st){
+	typeptr paramtype1, paramtype2;
+
+	switch(t->prodrule){
+		case assignment_expression:
+		case expression_list:
+			if(t->nkids > 1){
+				pptr = traverse_parameters(t->kids[0], functype, pptr, st);
+				pptr = traverse_parameters(t->kids[2], functype, pptr, st);
+				return pptr;
+			}else{
+				paramtype1 = get_right_type(t->kids[0], st);
+				printf("param1: %s\n", typename(paramtype1));
+				paramtype2 = pptr->type;
+				printf("param2: %s, name: %s\n", typename(paramtype2), pptr->name);
+				if(compare_types(0, paramtype1, paramtype2) != 0){
+					fprintf(stderr, "in \"%s\": non-matching type for parameter in function: %s()\n", 
+							st->scope->u.f.name, functype->u.f.name);
+					exit(3);
+				}
+
+				pptr = pptr->next;
+				return pptr;
+			}
+
+		default:
+			return pptr;
+	}
+}
+
+
+
+int count_params(struct tree *t, int n){
+	while(1){
+		switch(t->prodrule){
+			case expression_list:
+				n++;
+				n = count_params(t->kids[0], n);
+				return n;
+
+			default:
+				return n;		
+		}
+	}
+}
+
+
+typeptr get_left_type(struct tree *t, SymbolTable symtab){
+	char *s;
+	int i;
+	typeptr typ = NULL;
+
+	while(1){
+		switch(t->prodrule){
+			case identifier:{
+				s = t->kids[0]->leaf->text;
+				SymbolTable st = symtab;
+				SymbolTableEntry ste = NULL;
+				do{
+					ste = lookup_symbol(st, s);
+					st = st->parent;
+				}while(!ste && st);
+
+				if(ste == NULL){
+					fprintf(stderr, "undeclared name: \"%s\"\n", s);
+					exit(3);
+				}else{
+					typ = ste->type;
+					printf("left: typ->basetype: %s, name: %s\n", typename(typ), ste->s);
+					return typ;
+				}
+			}
+
+			default:
+				if(t->prodrule < 0){
+					for(i = 0; i < t->nkids; i++){
+						if(t->kids[i] == NULL)
+							return typ;
+						typ = get_left_type(t->kids[i], symtab);
+					}
+					return typ;
+				}
+				return typ;
+		}
+	}
+}
+
+typeptr get_right_type(struct tree *t, SymbolTable symtab){
+	char *s;
+	int i;
+	typeptr typ = NULL;
+
+	while(1){
+		switch(t->prodrule){
+			case identifier:{
+				s = t->kids[0]->leaf->text;
+				SymbolTable st = symtab;
+				SymbolTableEntry ste = NULL;
+				do{
+					ste = lookup_symbol(st, s);
+					st = st->parent;
+				}while(!ste && st);
+
+				if(ste == NULL){
+					fprintf(stderr, "undeclared name: \"%s\"\n", s);
+					exit(3);
+				}else{
+					typ = ste->type;
+					printf("right: typ->basetype: %s, name: %s\n", typename(typ), ste->s);
+					return typ;
+				}
+			}
+
+			case integer_literal:
+				typ = &integer_type;
+				typ->pointer = 0;
+				return typ;
+
+			case character_literal:
+				typ = &char_type;
+				typ->pointer = 0;
+				return typ;
+	
+			case floating_literal:
+				typ = &double_type;
+				typ->pointer = 0;
+				return typ;
+	
+			case string_literal:
+				typ = &char_type;
+				typ->pointer = 1;
+				return typ;
+	
+			case boolean_literal:
+				typ = &bool_type;
+				typ->pointer = 0;
+				return typ;
+			/*
+			case unary_expression:
+				if(t->nkids > 1 && t->kids[0]->prodrule == AND){
+					and_flag = 1;
+					typ = get_right_type(t->kids[1]);
+				}else{
+					typ = get_right_type(t->kids[0]);
+				}
+				return typ;
+			*/
+			case additive_expression:
+				if(t->nkids > 1){
+					typeptr lt = get_right_type(t->kids[0], symtab); //technically the left side of the assignment operator can't have other operators
+					typeptr rt = get_right_type(t->kids[2], symtab);
+					if(t->kids[1]->prodrule == PLUS){
+						if(compare_types(PLUS, lt, rt) == 0)
+							return lt;
+						else{
+							fprintf(stderr, "non-matching types: \"%s + %s\": line %d\n", typename(lt), typename(rt), t->kids[1]->leaf->lineno);
+							exit(3);
+						}
+					}
+					else{
+						if(compare_types(MINUS, lt, rt) == 0)
+							return lt;
+						else{
+							fprintf(stderr, "non-matching types: \"%s - %s\": line %d\n", typename(lt), typename(rt), t->kids[1]->leaf->lineno);
+							exit(3);
+						}
+					}
+				}else{
+					typ = get_right_type(t->kids[0], symtab);
+
+					return typ;
+				}
+
+
+
+			case multiplicative_expression:
+				if(t->nkids > 1){
+					typeptr lt = get_right_type(t->kids[0], symtab); //technically the left side of the assignment operator can't have other operators
+					typeptr rt = get_right_type(t->kids[2], symtab);
+					if(t->kids[1]->prodrule == MUL){
+						if(compare_types(MUL, lt, rt) == 0)
+							return lt;
+						else{
+							fprintf(stderr, "non-matching types: \"%s * %s\": line %d\n", typename(lt), typename(rt), t->kids[1]->leaf->lineno);
+							exit(3);
+						}
+					}
+					else if(t->kids[1]->prodrule == DIV){
+						if(compare_types(DIV, lt, rt) == 0)
+							return lt;
+						else{
+							fprintf(stderr, "non-matching types: \"%s / %s\": line %d\n", typename(lt), typename(rt), t->kids[1]->leaf->lineno);
+							exit(3);
+						}
+					}else{
+						if(compare_types(MOD, lt, rt) == 0)
+							return lt;
+						else{
+							fprintf(stderr, "non-matching types: \"%s %% %s\": line %d\n", typename(lt), typename(rt), t->kids[1]->leaf->lineno);
+							exit(3);
+						}
+					}
+				}else{
+					typ = get_right_type(t->kids[0], symtab);
+					return typ;
+				}
+				
+
+			default:
+				if(t->prodrule < 0){
+					for(i = 0; i < t->nkids; i++){
+						if(t->kids[i] == NULL)
+							return typ;
+						typ = get_right_type(t->kids[i], symtab);
+					}
+					return typ;
+				}
+				return typ;
+		}
+	}
+}
+
+
+int compare_types(int opr, typeptr lt, typeptr rt){
+	if(lt == NULL || rt == NULL)
+		return 1;
+
+	switch(opr){
+		case 0:
+		case DIV:
+		case MUL:
+		case MOD:
+		case PLUS:
+		case MINUS:
+		case ASN:
+			if(lt->basetype == rt->basetype)
+				return 0;
+			else
+				return 1;
+			
+		default:
+			return 1;
 	}
 }

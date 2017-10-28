@@ -18,13 +18,14 @@ int print_tree(struct tree *t, int depth)
 	  for(i = 0; i < t->nkids; i++)
 	    print_tree(t->kids[i], depth+1);
 	}
+    return 0;
 }
 
 char *humanreadable(struct tree *t)
 {
-  if(t->prodrule < 0)
-    return nonterm_lookup(t->prodrule);
-  else if(t->prodrule > 0)
+    if(t->prodrule < 0){
+        return nonterm_lookup(t->prodrule);
+    }
     return t->leaf->text;
 }
 
@@ -212,5 +213,7 @@ char *nonterm_lookup(int rule)
     case -172000: return "handler_seq_opt"; 
     case -173000: return "assignment_expression_opt"; 
     case -174000: return "type_id_list_opt"; 
+    default:
+        return "error: nonterm not found";
   }
 }

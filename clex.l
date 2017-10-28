@@ -12,12 +12,13 @@ LIT      \"(\\.|[^\\"])*\"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include "120gram.tab.h"
 #include "token.h"
 #include "tree.h"
 #include "nonterm.h"
+#include "symtab.h"
 
+#define YY_NO_INPUT
 #define MAX_INCLUDE_DEPTH 2
 
 extern char *file_name;
@@ -30,7 +31,7 @@ void string_to_sval(char *text);
 void char_to_sval(char *text);
 void remove_substring(char *s, char *s_remove);
 int check_identifier(char *);
-int typenametable_insert(char *s, int cat);
+//int typenametable_insert(char *s, int cat);
 struct tree *leaf_node(int token_num);
 void clear_typename_table();
 void clear_sysinclude_flags();
@@ -60,7 +61,7 @@ int ival;
 char *sval;
 double dval;
 
-/* System include flags */
+/* Systeam Includes */
 int included_cmath = 0;
 int included_cstdlib = 0;
 int included_ctime = 0;
@@ -68,6 +69,10 @@ int included_fstream = 0;
 int included_iostream = 0;
 int included_string = 0;
 int included_std = 0;
+
+extern int iostream_flag;
+extern int namespace_flag;
+
 
 /* Other counters */
 int line_num = 1;
@@ -167,27 +172,31 @@ int errors;
 "while"                 { generate_token(WHILE); yylval.treenode = leaf_node(WHILE); return WHILE; }
 "xor"                   { lexerr(yytext); }
 "xor_eq"                { lexerr(yytext); }
-"#include <iostream>"   { included_iostream = 1; }
+"#include <iostream>"   { included_iostream = 1; iostream_flag = 1; }
 "#include <string>"     { included_string = 1; }
 "#include <ctime>"      { included_ctime = 1; }
 "#include <cstdlib>"    { included_cstdlib = 1; }
 "#include <cmath>"      { included_cmath = 1; }
 "#include <fstream>"    { included_fstream = 1; }
 
-"std"           { included_std = 1; generate_token(STD); yylval.treenode = leaf_node(STD);
+"std"           { included_std = 1; generate_token(STD); yylval.treenode = leaf_node(STD); namespace_flag = 1;
                 if (included_string) typenametable_insert("string", CLASS_NAME);
                 if (included_iostream)
                 {
                    typenametable_insert("ifstream", CLASS_NAME);
                    typenametable_insert("ofstream", CLASS_NAME);
                    typenametable_insert("fstream", CLASS_NAME);
+                   typenametable_insert("cout", IDENTIFIER);
+                   typenametable_insert("cin", IDENTIFIER);
+                   typenametable_insert("endl", IDENTIFIER);
                 }
                 return STD;
              }
 
 
-{L}({L}|{D})*           {   int cat = check_identifier(yytext);
-                            generate_token(cat); 
+{L}({L}|{D})*           {   int cat;
+                            cat = check_identifier(yytext);
+                            generate_token(cat);
                             yylval.treenode = leaf_node(cat); 
                             return cat;
                         }
@@ -269,7 +278,7 @@ void lexerr(char *s)
 	fprintf(stderr, "%s: lexical error", s);
 
 	fprintf(stderr, ", C++ token \"%s\" is not legal in 120++, file: %s line: %d\n", yytext, file_name, line_num);
-        exit(1);
+  exit(1);
 }
 
 /*
@@ -281,7 +290,7 @@ int yywrap()
    {
       line_num = 1;
       clear_typename_table();
-      clear_sysinclude_flags();
+      //clear_sysinclude_flags();
 
       return 1;
    }
@@ -457,11 +466,10 @@ void remove_substring(char *s, char *s_remove)
    char *temp_str = NULL;
    int rlen = strlen(s_remove);
    
-   while(temp_str = strstr(s, s_remove))
+   while((temp_str = strstr(s, s_remove)))
    {
-      int tlen = strlen(temp_str);     
+      //int tlen = strlen(temp_str);
       
-      /* If we need to remove escaped ' " or \ , then only remove the first backslash */
       if(strcmp(s_remove, "\\'") == 0 || strcmp(s_remove, "\\\\") == 0 || strcmp(s_remove, "\\\"") == 0)
          memmove(temp_str, temp_str + (rlen - 1), 1 + strlen(temp_str + (rlen - 1)));
       
@@ -501,8 +509,9 @@ void remove_substring(char *s, char *s_remove)
 int typenametable_lookup(char *s)
 {
    struct typenametable_entry *tmp = head;
-   while (tmp) {
-      if (!strcmp(s, tmp->name)) return tmp->category;
+   while (tmp != NULL) {
+      if (strcmp(s, tmp->name) == 0)
+        return tmp->category;
       tmp = tmp->next;
    }
    return IDENTIFIER;
@@ -524,6 +533,7 @@ int typenametable_insert(char *s, int cat)
    tmp->category = cat;
    tmp->next = head;
    head = tmp;
+   return 0;
 }
 
 int check_identifier(char *s)

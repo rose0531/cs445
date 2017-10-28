@@ -94,37 +94,37 @@ extern int yydebug;
     PLUSPLUS = 304,
     MINUSMINUS = 305,
     ARROW = 306,
-    STD = 307,
-    BOOL = 308,
-    BREAK = 309,
-    CASE = 310,
-    CHAR = 311,
-    CLASS = 312,
-    CONST = 313,
-    DEFAULT = 314,
-    DELETE = 315,
-    DO = 316,
-    DOUBLE = 317,
-    ELSE = 318,
-    FALSE = 319,
-    FLOAT = 320,
-    FOR = 321,
-    IF = 322,
-    INT = 323,
-    LONG = 324,
-    NAMESPACE = 325,
-    NEW = 326,
-    PRIVATE = 327,
-    PUBLIC = 328,
-    RETURN = 329,
-    SHORT = 330,
-    SWITCH = 331,
-    TRUE = 332,
-    TYPENAME = 333,
-    UNSIGNED = 334,
+    BOOL = 307,
+    BREAK = 308,
+    CASE = 309,
+    CHAR = 310,
+    CLASS = 311,
+    CONST = 312,
+    DEFAULT = 313,
+    DELETE = 314,
+    DO = 315,
+    DOUBLE = 316,
+    ELSE = 317,
+    FALSE = 318,
+    FLOAT = 319,
+    FOR = 320,
+    IF = 321,
+    INT = 322,
+    LONG = 323,
+    NEW = 324,
+    PRIVATE = 325,
+    PUBLIC = 326,
+    RETURN = 327,
+    SHORT = 328,
+    SWITCH = 329,
+    TRUE = 330,
+    TYPENAME = 331,
+    UNSIGNED = 332,
+    VOID = 333,
+    WHILE = 334,
     USING = 335,
-    VOID = 336,
-    WHILE = 337
+    NAMESPACE = 336,
+    STD = 337
   };
 #endif
 
@@ -133,7 +133,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 66 "120gram.y" /* yacc.c:1909  */
+#line 67 "120gram.y" /* yacc.c:1909  */
 
   struct tree* treenode;
 
